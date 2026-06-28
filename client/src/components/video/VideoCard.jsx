@@ -1,10 +1,9 @@
-// components/video/VideoCard.jsx — YT dark card with duration badge
+// components/video/VideoCard.jsx — pixel-perfect YT dark card
 import { Link } from "react-router-dom";
 import { formatViews, formatDate } from "../../utils/formatViews.js";
 
-const FALLBACK_THUMB = "https://placehold.co/320x180/1a1a1a/ffffff?text=No+Thumbnail";
+const FALLBACK_THUMB = "https://placehold.co/320x180/272727/aaaaaa?text=No+Thumbnail";
 
-// Format seconds to MM:SS or H:MM:SS
 function formatDuration(seconds) {
   if (!seconds || isNaN(seconds)) return null;
   const h = Math.floor(seconds / 3600);
@@ -16,14 +15,16 @@ function formatDuration(seconds) {
 
 function VideoCard({ video }) {
   const { _id, title, thumbnailUrl, channel, views, createdAt, duration } = video;
-  const channelName = channel?.channelName || "Unknown Channel";
+  const channelName   = channel?.channelName || "Unknown Channel";
   const channelAvatar = channel?.avatar;
   const avatarInitial = channelName[0]?.toUpperCase() || "C";
-  const durationStr = formatDuration(duration);
+  const channelId     = channel?._id;
+  const durationStr   = formatDuration(duration);
 
   return (
-    <Link to={`/video/${_id}`} className="video-card">
-      <div className="video-card__thumb-wrap">
+    <div className="video-card">
+      {/* Thumbnail */}
+      <Link to={`/video/${_id}`} className="video-card__thumb-wrap" tabIndex={-1}>
         <img
           className="video-card__thumb"
           src={thumbnailUrl || FALLBACK_THUMB}
@@ -34,24 +35,41 @@ function VideoCard({ video }) {
         {durationStr && (
           <span className="video-card__duration">{durationStr}</span>
         )}
-      </div>
+        {/* 3-dot hover menu */}
+        <button
+          className="video-card__menu"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          aria-label="More options"
+        >
+          <svg viewBox="0 0 24 24" height="16" width="16" fill="currentColor">
+            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+        </button>
+      </Link>
 
+      {/* Info row */}
       <div className="video-card__info">
-        <div className="video-card__avatar">
+        {/* Channel avatar */}
+        <Link to={channelId ? `/channel/${channelId}` : "#"} className="video-card__avatar">
           {channelAvatar
             ? <img src={channelAvatar} alt={channelName} />
             : <span>{avatarInitial}</span>
           }
-        </div>
+        </Link>
+
         <div className="video-card__meta">
-          <p className="video-card__title">{title}</p>
-          <p className="video-card__channel">{channelName}</p>
+          <Link to={`/video/${_id}`} className="video-card__title-link">
+            <p className="video-card__title">{title}</p>
+          </Link>
+          <Link to={channelId ? `/channel/${channelId}` : "#"} className="video-card__channel">
+            {channelName}
+          </Link>
           <p className="video-card__stats">
             {formatViews(views)} · {formatDate(createdAt)}
           </p>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

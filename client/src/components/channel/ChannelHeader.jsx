@@ -1,40 +1,49 @@
-// components/channel/ChannelHeader.jsx — FE-07
+// components/channel/ChannelHeader.jsx — pixel-perfect YT channel header
 function ChannelHeader({ channel }) {
-  const initials = channel.channelName?.[0]?.toUpperCase() || "C";
+  const {
+    channelName = "Channel",
+    handle,
+    description,
+    avatar,
+    banner,
+    subscribers = [],
+    videos = [],
+  } = channel;
+
+  const avatarInitial = channelName[0]?.toUpperCase() || "C";
+  const subCount = Array.isArray(subscribers) ? subscribers.length : (subscribers || 0);
+  const videoCount = Array.isArray(videos) ? videos.length : (videos || 0);
+
+  const formatSubs = (n) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K`;
+    return n.toString();
+  };
 
   return (
-    <div className="channel-header">
-      {/* Banner */}
-      {channel.channelBanner ? (
-        <div
-          className="ch-banner"
-          style={{ backgroundImage: `url(${channel.channelBanner})` }}
-        />
-      ) : (
-        <div className="ch-banner ch-banner--default" />
-      )}
+    <div className="ch-page-header">
+      {/* Banner — edge-to-edge */}
+      <div
+        className={`ch-banner${banner ? "" : " ch-banner--default"}`}
+        style={banner ? { backgroundImage: `url(${banner})` } : {}}
+      />
 
-      {/* Info row */}
+      {/* Channel info row */}
       <div className="ch-info">
         <div className="ch-avatar">
-          {channel.avatar
-            ? <img src={channel.avatar} alt={channel.channelName} />
-            : <span>{initials}</span>
+          {avatar
+            ? <img src={avatar} alt={channelName} />
+            : avatarInitial
           }
         </div>
+
         <div className="ch-text">
-          <h1 className="ch-name">{channel.channelName}</h1>
-          <p className="ch-handle">{channel.handle}</p>
+          <h1 className="ch-name">{channelName}</h1>
+          {handle && <p className="ch-handle">@{handle.replace(/^@/, "")}</p>}
           <p className="ch-sub-count">
-            {(channel.subscribers || 0).toLocaleString()} subscriber
-            {channel.subscribers !== 1 ? "s" : ""}
-            {" · "}
-            {(channel.videos?.length || 0)} video
-            {channel.videos?.length !== 1 ? "s" : ""}
+            {formatSubs(subCount)} subscribers · {videoCount} video{videoCount !== 1 ? "s" : ""}
           </p>
-          {channel.description && (
-            <p className="ch-desc">{channel.description}</p>
-          )}
+          {description && <p className="ch-desc">{description}</p>}
         </div>
       </div>
     </div>

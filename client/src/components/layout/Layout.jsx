@@ -25,7 +25,7 @@ function Layout() {
       <Header onToggleSidebar={toggleSidebar} onSearch={handleSearch} />
       <div className="yt-body">
         <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
-        <main className={`yt-main ${sidebarOpen ? "yt-main--sidebar-open" : ""}`}>
+        <main className={`yt-main${sidebarOpen ? " yt-main--sidebar-open" : ""}`}>
           <Outlet />
         </main>
       </div>
