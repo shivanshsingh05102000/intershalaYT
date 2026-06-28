@@ -13,7 +13,8 @@ export const validateRegister = [
     .withMessage("Username must be at least 3 characters"),
   body("email")
     .isEmail()
-    .withMessage("Enter a valid email"),
+    .withMessage("Enter a valid email")
+    .normalizeEmail(),
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters"),
@@ -22,7 +23,8 @@ export const validateRegister = [
 export const validateLogin = [
   body("email")
     .isEmail()
-    .withMessage("Enter a valid email"),
+    .withMessage("Enter a valid email")
+    .normalizeEmail(),
   body("password")
     .notEmpty()
     .withMessage("Password is required"),

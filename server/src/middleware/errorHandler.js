@@ -6,7 +6,7 @@ export const errorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     message: err.message || "Server error",
-    // stack only in dev — TODO: gate behind process.env.NODE_ENV !== "production"
+    // Stack traces only leak in non-production environments.
     stack: process.env.NODE_ENV === "production" ? undefined : err.stack,
   });
 };

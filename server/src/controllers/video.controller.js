@@ -4,14 +4,20 @@
 import Video from "../models/Video.model.js";
 import Channel from "../models/Channel.model.js";
 
+// Escapes regex metacharacters so search input is matched literally.
+// Without this, a query like "C++" or "(a+)+$" either fails to match what
+// the user actually meant, or — in the worst case — triggers catastrophic
+// backtracking (ReDoS) on a crafted pattern.
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const getVideos = async (req, res, next) => {
   try {
     const { search, category } = req.query;
     const filter = {};
 
     if (search) {
-      // case-insensitive partial match on title
-      filter.title = { $regex: search, $options: "i" };
+      // case-insensitive partial match on title, with literal special chars
+      filter.title = { $regex: escapeRegex(search), $options: "i" };
     }
     if (category) {
       filter.category = category;
