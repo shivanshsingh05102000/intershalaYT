@@ -3,6 +3,7 @@
 Full-stack YouTube clone built for the capstone requirement using MongoDB, Express, React with Vite, and Node.js.
 
 > **Repository:** [github.com/shivanshsingh05102000/intershalaYT](https://github.com/shivanshsingh05102000/intershalaYT.git)
+> **Video Link:** [Watch the Demo Walkthrough](https://drive.google.com/file/d/1wxlDjOb19nSd8vIdHWz5tqY1EA7B1ETO/view?usp=drive_link)
 
 ## For Evaluators
 
