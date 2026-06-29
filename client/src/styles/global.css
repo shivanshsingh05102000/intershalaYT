@@ -110,14 +110,14 @@ img { display: block; }
 }
 
 .yt-header__logo {
-  display: flex; align-items: center; gap: 1px;
+  display: flex; align-items: center; gap: 0;
   text-decoration: none; padding: 6px 14px 6px 6px;
   border-radius: 4px;
 }
 .yt-header__logo-text {
   font-size: 20px; font-weight: 700; color: var(--text);
   letter-spacing: -0.8px; font-family: 'Roboto', Arial, sans-serif;
-  margin-left: 4px;
+  margin-left: 1px;
 }
 .yt-header__logo-in {
   font-size: 10px; font-weight: 500; color: var(--text-secondary);
