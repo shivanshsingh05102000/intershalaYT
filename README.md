@@ -2,6 +2,8 @@
 
 Full-stack YouTube clone built for the capstone requirement using MongoDB, Express, React with Vite, and Node.js.
 
+> **Repository:** [github.com/shivanshsingh05102000/intershalaYT](https://github.com/shivanshsingh05102000/intershalaYT.git)
+
 ## For Evaluators
 
 - **Setup** — see [Setup](#setup) below; takes under 5 minutes with `npm run seed`.
@@ -11,9 +13,9 @@ Full-stack YouTube clone built for the capstone requirement using MongoDB, Expre
   like/dislike, comment CRUD, channel CRUD).
 - **Sample data** — `npm run seed` populates 8 users, 8 channels, ~37 videos
   across all 6 categories, and generated comments. See [Sample Logins](#sample-logins).
-- **Demo video** — ⚠️ TODO before submission: record a short walkthrough
-  covering sign up/login, search & filter, watching a video, like/dislike,
-  adding a comment, and creating/editing/deleting a video from your channel.
+- **Demo video** — 🎬 [**Watch the Demo Walkthrough**](https://drive.google.com/file/d/1wxlDjOb19nSd8vIdHWz5tqY1EA7B1ETO/view?usp=drive_link)
+  *(covers sign up/login, search & filter, watching a video, like/dislike,
+  adding a comment, and creating/editing/deleting a video from your channel)*
 
 ## Feature Checklist
 

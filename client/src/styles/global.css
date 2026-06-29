@@ -1183,6 +1183,12 @@ img { display: block; }
   .yt-main { margin-left: 0 !important; }
   .yt-main--sidebar-open { margin-left: 0 !important; }
   .sidebar-overlay { display: block; }
+
+  /* Fix: header left was collapsing to 0 because width = var(--sidebar-mini) = 0px on tablet.
+     Override to auto so hamburger + logo are always visible. */
+  .yt-header__left {
+    width: auto;
+  }
 }
 
 @media (min-width: 1025px) {
@@ -1190,7 +1196,7 @@ img { display: block; }
 }
 
 @media (max-width: 768px) {
-  .yt-header__left { width: auto; }
+  /* .yt-header__left width:auto already set in the 1024px rule above */
   .yt-header__logo-text { display: none; }
   .ch-info { padding: 0 16px 16px; gap: 16px; }
   .ch-avatar { width: 60px; height: 60px; font-size: 22px; }
@@ -1349,4 +1355,3 @@ img { display: block; }
   font-size: 12px; color: var(--text-secondary); font-family: inherit;
 }
 .playlist-detail__remove:hover { color: var(--text); text-decoration: underline; }
-
