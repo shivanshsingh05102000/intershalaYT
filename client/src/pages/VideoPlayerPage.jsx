@@ -1,10 +1,13 @@
 // client/src/pages/VideoPlayerPage.jsx
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import VideoPlayer from "../components/video/VideoPlayer.jsx";
 import CommentSection from "../components/comments/CommentSection.jsx";
+import SaveMenu from "../components/video/SaveMenu.jsx";
 import { getVideoById, getVideos, likeVideo, dislikeVideo } from "../services/videoService.js";
 import { getCommentsForVideo, addComment, updateComment, deleteComment } from "../services/commentService.js";
+import { toggleSubscribe } from "../services/channelService.js";
+import { addHistory } from "../services/userService.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { formatViews, formatDate } from "../utils/formatViews.js";
 
@@ -48,17 +51,10 @@ function ShareIcon() {
   );
 }
 
-function MoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-    </svg>
-  );
-}
-
 function VideoPlayerPage() {
   const { id } = useParams();
-  const { user, isAuthed } = useAuth();
+  const { user, isAuthed, refreshUser } = useAuth();
+  const navigate = useNavigate();
 
   const [video,         setVideo]         = useState(null);
   const [videoLoading,  setVideoLoading]  = useState(true);
@@ -67,7 +63,7 @@ function VideoPlayerPage() {
   const [suggestions,   setSuggestions]   = useState([]);
   const [activeChip,    setActiveChip]    = useState("All");
   const [descExpanded,  setDescExpanded]  = useState(false);
-  const [subscribed,    setSubscribed]    = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   const [likesCount,      setLikesCount]      = useState(0);
   const [dislikesCount,   setDislikesCount]   = useState(0);
@@ -97,6 +93,17 @@ function VideoPlayerPage() {
     setUserHasLiked(video.likes?.some(matchesUser) ?? false);
     setUserHasDisliked(video.dislikes?.some(matchesUser) ?? false);
   }, [video, user]);
+
+  // Log this watch to history. Re-watching the same video later just
+  // refreshes its position in the list (handled server-side) rather than
+  // creating a duplicate row.
+  useEffect(() => {
+    if (isAuthed && video?._id) {
+      addHistory(video._id).catch(() => {
+        // Non-critical — history is a convenience feature, not the playback path.
+      });
+    }
+  }, [isAuthed, video?._id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,6 +152,30 @@ function VideoPlayerPage() {
   const handleEditComment   = async (commentId, text) => { const res = await updateComment(commentId, { text }); setComments((p) => p.map((c) => (c._id === commentId ? res.data.comment : c))); };
   const handleDeleteComment = async (commentId) => { await deleteComment(commentId); setComments((p) => p.filter((c) => c._id !== commentId)); };
 
+  // Same subscribe wiring as ChannelHeader — kept in sync via refreshUser()
+  // so subscribing here vs. on the channel page never disagree.
+  const channelOwnerId = video?.channel?.owner;
+  const isOwnChannel = isAuthed && channelOwnerId && user?._id === channelOwnerId;
+  const isSubscribed = isAuthed && (user?.subscribedChannels || []).some(
+    (c) => (typeof c === "string" ? c : c._id) === video?.channel?._id
+  );
+
+  const handleToggleSubscribe = async () => {
+    if (!isAuthed) {
+      navigate("/login");
+      return;
+    }
+    setSubscribeLoading(true);
+    try {
+      await toggleSubscribe(video.channel._id);
+      await refreshUser();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update subscription.");
+    } finally {
+      setSubscribeLoading(false);
+    }
+  };
+
   if (videoLoading) return <div className="vpp-loading">Loading video…</div>;
   if (videoError || !video) return (
     <div className="vpp-error"><p>Video not found or failed to load.</p><Link to="/">← Back to home</Link></div>
@@ -183,12 +214,15 @@ function VideoPlayerPage() {
               </div>
             </div>
 
-            <button
-              className={`vpp-subscribe-btn${subscribed ? " vpp-subscribe-btn--subscribed" : ""}`}
-              onClick={() => setSubscribed((p) => !p)}
-            >
-              {subscribed ? "Subscribed" : "Subscribe"}
-            </button>
+            {!isOwnChannel && (
+              <button
+                className={`vpp-subscribe-btn${isSubscribed ? " vpp-subscribe-btn--subscribed" : ""}`}
+                onClick={handleToggleSubscribe}
+                disabled={subscribeLoading}
+              >
+                {isSubscribed ? "Subscribed" : "Subscribe"}
+              </button>
+            )}
           </div>
 
           {/* Right: like / dislike / share / more */}
@@ -224,10 +258,8 @@ function VideoPlayerPage() {
               <span>Share</span>
             </button>
 
-            {/* More (⋮) */}
-            <button className="vpp-action-btn" style={{ padding: "0 12px", minWidth: 0 }}>
-              <MoreIcon />
-            </button>
+            {/* Save (watch later / download / playlists) */}
+            <SaveMenu videoId={id} />
           </div>
         </div>
 

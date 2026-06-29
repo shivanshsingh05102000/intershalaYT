@@ -4,7 +4,13 @@
 
 import VideoCard from "./VideoCard.jsx";
 
-function VideoGrid({ videos, loading, error }) {
+function VideoGrid({
+  videos,
+  loading,
+  error,
+  emptyTitle = "No videos found",
+  emptyMessage = "Try a different search or filter.",
+}) {
   if (loading) {
     return (
       <div className="video-grid video-grid--loading">
@@ -35,7 +41,8 @@ function VideoGrid({ videos, loading, error }) {
   if (!videos || videos.length === 0) {
     return (
       <div className="video-grid__empty">
-        <p>No videos found. Try a different search or filter.</p>
+        <p className="video-grid__empty-title">{emptyTitle}</p>
+        <p>{emptyMessage}</p>
       </div>
     );
   }

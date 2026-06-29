@@ -1,6 +1,7 @@
 // components/layout/Sidebar.jsx — pixel-perfect YT dark sidebar
 // Mini icon-rail (72px) on desktop; full 240px drawer on mobile/when open
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth.js";
 
 /* ─── Icons ─────────────────────────────────────────────────── */
 const HomeIcon = () => (
@@ -68,11 +69,6 @@ const MoviesIcon = () => (
     <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
   </svg>
 );
-const ChevronDown = () => (
-  <svg viewBox="0 0 24 24" height="20" width="20" fill="currentColor">
-    <path d="M7 10l5 5 5-5z"/>
-  </svg>
-);
 const ChevronRight = () => (
   <svg viewBox="0 0 24 24" height="18" width="18" fill="currentColor">
     <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
@@ -84,15 +80,11 @@ const ReportIcon = () => (
   </svg>
 );
 
-const SUBSCRIPTIONS = [
-  { name: "ComicVerse",        color: "#1a73e8", dot: true  },
-  { name: "UpDating",          color: "#e91e63", dot: true  },
-  { name: "Raj Shamani",       color: "#ff9800", dot: false },
-  { name: "Programming Liv...",color: "#4caf50", dot: true  },
-  { name: "Career247",         color: "#9c27b0", dot: false },
-  { name: "PJ Explained",      color: "#00bcd4", dot: true  },
-  { name: "Anubhav Choubey",   color: "#ff5722", dot: false },
-];
+const SignInIcon = () => (
+  <svg viewBox="0 0 24 24" height="18" width="18" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+  </svg>
+);
 
 /* ─── Reusable nav item wrapper ─────────────────────────────── */
 function SidebarNavItem({ to, icon, miniLabel, fullLabel, end = false, onClick }) {
@@ -118,6 +110,10 @@ function SidebarNavItem({ to, icon, miniLabel, fullLabel, end = false, onClick }
 }
 
 function Sidebar({ isOpen, onClose }) {
+  const { isAuthed, user } = useAuth();
+  const subscribedChannels = user?.subscribedChannels || [];
+  const closeOnNavigate = isOpen ? onClose : undefined;
+
   return (
     <>
       {isOpen && (
@@ -133,10 +129,17 @@ function Sidebar({ isOpen, onClose }) {
       <aside className={`yt-sidebar${isOpen ? " yt-sidebar--open" : ""}`}>
         <div className="yt-sidebar__scroll">
 
-          {/* ── Top nav (always visible in mini) ── */}
-          <SidebarNavItem to="/"          icon={<HomeIcon />}    miniLabel="Home"          fullLabel="Home"          end onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/?category=Shorts" icon={<ShortsIcon />}  miniLabel="Shorts"        fullLabel="Shorts"        onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/?category=Subscriptions" icon={<SubsIcon />}   miniLabel="Subscriptions" fullLabel="Subscriptions" onClick={isOpen ? onClose : undefined} />
+          {/* ── Top nav (always visible in mini) ──
+              `end` on Home matters: without it, NavLink's default
+              prefix-matching would mark Home active on every route in the
+              app, since literally every path starts with "/". */}
+          <SidebarNavItem to="/"       icon={<HomeIcon />}   miniLabel="Home"   fullLabel="Home"   end onClick={closeOnNavigate} />
+          <SidebarNavItem to="/shorts" icon={<ShortsIcon />} miniLabel="Shorts" fullLabel="Shorts"     onClick={closeOnNavigate} />
+          {/* Subscriptions is inherently personal — there's nothing to show
+              logged out, so it's hidden rather than linking to an empty feed. */}
+          {isAuthed && (
+            <SidebarNavItem to="/subscriptions" icon={<SubsIcon />} miniLabel="Subscriptions" fullLabel="Subscriptions" onClick={closeOnNavigate} />
+          )}
 
           {/* ── Divider + You section ── */}
           <div className="yt-sidebar__divider" />
@@ -146,34 +149,52 @@ function Sidebar({ isOpen, onClose }) {
             <ChevronRight />
           </div>
 
-          <SidebarNavItem to="/channel/me" icon={<YouIcon />}       miniLabel="You"         fullLabel="Your channel"  onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/history"    icon={<HistoryIcon />}   miniLabel="History"     fullLabel="History"       onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/playlists"  icon={<PlaylistIcon />}  miniLabel="Playlists"   fullLabel="Playlists"     onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/watch-later"icon={<WatchLaterIcon />}miniLabel="Watch later" fullLabel="Watch later"   onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/liked"      icon={<LikedIcon />}     miniLabel="Liked"       fullLabel="Liked videos"  onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/your-videos"icon={<YourVideosIcon />}miniLabel="Your videos" fullLabel="Your videos"   onClick={isOpen ? onClose : undefined} />
-          <SidebarNavItem to="/downloads"  icon={<DownloadsIcon />} miniLabel="Downloads"   fullLabel="Downloads"     onClick={isOpen ? onClose : undefined} />
-
-          {/* ── Subscriptions ── */}
-          <div className="yt-sidebar__divider" />
-          <div className="yt-sidebar__section-header">
-            <span>Subscriptions</span>
-          </div>
-
-          {SUBSCRIPTIONS.map((ch) => (
-            <div key={ch.name} className="yt-sidebar__item yt-sidebar__item--channel">
-              <div className="yt-sidebar__ch-avatar" style={{ background: ch.color }}>
-                {ch.name[0]}
-              </div>
-              <span className="yt-sidebar__item-mini-label" style={{ display: "none" }}></span>
-              <span className="yt-sidebar__item-label yt-sidebar__ch-name">{ch.name}</span>
-              {ch.dot && <span className="yt-sidebar__ch-dot" />}
+          {isAuthed ? (
+            <>
+              <SidebarNavItem to="/channel/me" icon={<YouIcon />}       miniLabel="You"         fullLabel="Your channel"  onClick={closeOnNavigate} />
+              <SidebarNavItem to="/history"    icon={<HistoryIcon />}   miniLabel="History"     fullLabel="History"       onClick={closeOnNavigate} />
+              <SidebarNavItem to="/playlists"  icon={<PlaylistIcon />}  miniLabel="Playlists"   fullLabel="Playlists"     onClick={closeOnNavigate} />
+              <SidebarNavItem to="/watch-later"icon={<WatchLaterIcon />}miniLabel="Watch later" fullLabel="Watch later"   onClick={closeOnNavigate} />
+              <SidebarNavItem to="/liked"      icon={<LikedIcon />}     miniLabel="Liked"       fullLabel="Liked videos"  onClick={closeOnNavigate} />
+              <SidebarNavItem to="/your-videos"icon={<YourVideosIcon />}miniLabel="Your videos" fullLabel="Your videos"   onClick={closeOnNavigate} />
+              <SidebarNavItem to="/downloads"  icon={<DownloadsIcon />} miniLabel="Downloads"   fullLabel="Downloads"     onClick={closeOnNavigate} />
+            </>
+          ) : (
+            <div className="yt-sidebar__signin-card">
+              <p>Sign in to like videos, comment, and subscribe.</p>
+              <Link to="/login" className="yt-sidebar__signin-btn" onClick={closeOnNavigate}>
+                <SignInIcon />
+                <span>Sign in</span>
+              </Link>
             </div>
-          ))}
+          )}
 
-          <button className="yt-sidebar__show-more">
-            <ChevronDown /><span>Show 36 more</span>
-          </button>
+          {/* ── Subscriptions shelf — real channels this user follows ── */}
+          {isAuthed && subscribedChannels.length > 0 && (
+            <>
+              <div className="yt-sidebar__divider" />
+              <div className="yt-sidebar__section-header">
+                <span>Subscriptions</span>
+              </div>
+
+              {subscribedChannels.map((ch) => (
+                <Link
+                  key={ch._id}
+                  to={`/channel/${ch._id}`}
+                  className="yt-sidebar__item yt-sidebar__item--channel"
+                  onClick={closeOnNavigate}
+                >
+                  <div className="yt-sidebar__ch-avatar">
+                    {ch.avatar
+                      ? <img src={ch.avatar} alt={ch.channelName} />
+                      : (ch.channelName?.[0]?.toUpperCase() || "C")}
+                  </div>
+                  <span className="yt-sidebar__item-mini-label" style={{ display: "none" }}></span>
+                  <span className="yt-sidebar__item-label yt-sidebar__ch-name">{ch.channelName}</span>
+                </Link>
+              ))}
+            </>
+          )}
 
           {/* ── Explore ── */}
           <div className="yt-sidebar__divider" />
@@ -182,10 +203,6 @@ function Sidebar({ isOpen, onClose }) {
           <SidebarNavItem icon={<ShoppingIcon />} miniLabel="Shopping" fullLabel="Shopping" />
           <SidebarNavItem icon={<MusicIcon />}    miniLabel="Music"    fullLabel="Music"    />
           <SidebarNavItem icon={<MoviesIcon />}   miniLabel="Movies"   fullLabel="Movies"   />
-
-          <button className="yt-sidebar__show-more">
-            <ChevronDown /><span>Show more</span>
-          </button>
 
           {/* ── More from YouTube ── */}
           <div className="yt-sidebar__divider" />

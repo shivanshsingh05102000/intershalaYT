@@ -1,6 +1,7 @@
 // components/video/VideoCard.jsx — pixel-perfect YT dark card
 import { Link } from "react-router-dom";
 import { formatViews, formatDate } from "../../utils/formatViews.js";
+import SaveMenu from "./SaveMenu.jsx";
 
 const FALLBACK_THUMB = "https://placehold.co/320x180/272727/aaaaaa?text=No+Thumbnail";
 
@@ -35,16 +36,7 @@ function VideoCard({ video }) {
         {durationStr && (
           <span className="video-card__duration">{durationStr}</span>
         )}
-        {/* 3-dot hover menu */}
-        <button
-          className="video-card__menu"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          aria-label="More options"
-        >
-          <svg viewBox="0 0 24 24" height="16" width="16" fill="currentColor">
-            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-          </svg>
-        </button>
+        <SaveMenu videoId={_id} />
       </Link>
 
       {/* Info row */}

@@ -1,5 +1,5 @@
 // components/channel/ChannelHeader.jsx — pixel-perfect YT channel header
-function ChannelHeader({ channel }) {
+function ChannelHeader({ channel, isOwner, isSubscribed, subscribeLoading, onToggleSubscribe }) {
   const {
     channelName = "Channel",
     handle,
@@ -45,6 +45,18 @@ function ChannelHeader({ channel }) {
           </p>
           {description && <p className="ch-desc">{description}</p>}
         </div>
+
+        {/* Owners manage their own channel elsewhere — subscribing to
+            yourself isn't a real thing, so the button just doesn't exist. */}
+        {!isOwner && (
+          <button
+            className={`ch-subscribe-btn${isSubscribed ? " ch-subscribe-btn--subscribed" : ""}`}
+            onClick={onToggleSubscribe}
+            disabled={subscribeLoading}
+          >
+            {isSubscribed ? "Subscribed" : "Subscribe"}
+          </button>
+        )}
       </div>
     </div>
   );

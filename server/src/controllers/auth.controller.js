@@ -45,7 +45,10 @@ export const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
     // 1. Find the user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate(
+      "subscribedChannels",
+      "channelName avatar"
+    );
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

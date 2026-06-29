@@ -28,6 +28,7 @@ const videoSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     likes: { type: [mongoose.Schema.Types.ObjectId], ref: "User", default: [] }, // store user ids to prevent duplicate likes
     dislikes: { type: [mongoose.Schema.Types.ObjectId], ref: "User", default: [] },
+    isShort: { type: Boolean, default: false },
   },
   { timestamps: true } // uploadDate derivable from createdAt
 );

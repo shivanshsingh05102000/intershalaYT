@@ -12,6 +12,22 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true }, // store bcrypt hash only, never plaintext
     avatar: { type: String, default: "" },
     channels: [{ type: mongoose.Schema.Types.ObjectId, ref: "Channel" }],
+
+    // ── Personal library ──────────────────────────────────────────────
+    // Kept here (not on Video, unlike likes/dislikes) because the natural
+    // query for all of these is "give me MY list" — a single populated
+    // array read beats scanning every Video for a match.
+    watchHistory: [
+      {
+        video: { type: mongoose.Schema.Types.ObjectId, ref: "Video", required: true },
+        watchedAt: { type: Date, default: Date.now },
+      },
+    ],
+    watchLater: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    // No real file download happens anywhere in this app — this is a
+    // saved/offline-marked list, same shape as watchLater, not actual bytes.
+    downloads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    subscribedChannels: [{ type: mongoose.Schema.Types.ObjectId, ref: "Channel" }],
   },
   { timestamps: true }
 );

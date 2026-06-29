@@ -393,26 +393,27 @@ img { display: block; }
   width: 24px; height: 24px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  background: var(--bg-hover); overflow: hidden;
 }
+.yt-sidebar__ch-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .yt-sidebar__ch-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
-.yt-sidebar__ch-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #3ea6ff; flex-shrink: 0;
-  display: none;
-}
-.yt-sidebar--open .yt-sidebar__ch-dot { display: block; }
 
-/* Show more */
-.yt-sidebar__show-more {
-  display: none; /* hidden in mini mode */
-  align-items: center; gap: 20px;
-  padding: 0 12px; width: calc(var(--sidebar-full) - 12px); min-height: 40px;
-  background: none; border: none; cursor: pointer;
-  color: var(--text); font-size: 14px; border-radius: 10px;
-  margin: 0 6px; transition: background 0.1s; font-family: inherit;
+/* Sign-in prompt — shown in place of the You section when logged out */
+.yt-sidebar__signin-card {
+  display: none; /* hidden in mini mode, same as the rest of the You section */
+  flex-direction: column; gap: 12px;
+  padding: 4px 16px 12px;
 }
-.yt-sidebar--open .yt-sidebar__show-more { display: flex; }
-.yt-sidebar__show-more:hover { background: var(--bg-hover); }
+.yt-sidebar--open .yt-sidebar__signin-card { display: flex; }
+.yt-sidebar__signin-card p { font-size: 14px; color: var(--text); line-height: 1.4; margin: 0; }
+.yt-sidebar__signin-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  width: fit-content; padding: 6px 12px;
+  border: 1px solid #3ea6ff; border-radius: 18px;
+  color: #3ea6ff; font-size: 14px; font-weight: 500;
+  text-decoration: none; transition: background 0.1s;
+}
+.yt-sidebar__signin-btn:hover { background: rgba(62, 166, 255, 0.1); }
 
 /* Footer */
 .yt-sidebar__footer {
@@ -466,7 +467,10 @@ img { display: block; }
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  /* auto-fit (not auto-fill): collapses empty tracks so a small number of
+     cards stretch to fill the row instead of getting squeezed into a tiny
+     sliver while empty reserved columns eat the rest of the width. */
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0;
   padding: 0 16px 16px;
 }
@@ -480,6 +484,10 @@ img { display: block; }
   text-align: center; padding: 80px 0;
   color: var(--text-secondary); font-size: 16px;
 }
+.video-grid__empty-title {
+  color: var(--text); font-size: 20px; font-weight: 600; margin: 0 0 8px;
+}
+.video-grid__empty p { margin: 0; }
 
 /* ── Video Card ── */
 .video-card {
@@ -488,9 +496,11 @@ img { display: block; }
   position: relative;
 }
 .video-card:hover .video-card__thumb { transform: scale(1.02); }
-.video-card:hover .video-card__menu { opacity: 1; }
 
 .video-card__thumb-wrap {
+  display: block; /* required: <a> defaults to inline, which breaks the
+     padding-top aspect-ratio trick below — inline boxes don't expand for
+     vertical padding, so without this the thumbnail collapses to ~0 height */
   position: relative; width: 100%; padding-top: 56.25%;
   background: #272727; border-radius: 12px; overflow: hidden;
   margin-bottom: 0;
@@ -512,16 +522,68 @@ img { display: block; }
   font-family: 'Roboto', sans-serif;
 }
 
-/* 3-dot hover menu on card */
-.video-card__menu {
+/* Save panel ("...") trigger + dropdown — reusable, used on cards and the
+   watch page. Positioning/reveal-on-hover for the card context is scoped
+   below via the .video-card__thumb-wrap descendant rule, not baked in here,
+   so the same component drops into other layouts unchanged. */
+.save-menu { position: relative; display: inline-flex; }
+
+.save-menu__trigger {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(15,15,15,0.9); color: #fff; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.save-menu__trigger:hover { background: rgba(50,50,50,0.9); }
+
+.save-menu__panel {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #282828; border: 1px solid #3f3f3f;
+  border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  min-width: 220px; max-width: 280px; z-index: 50; padding: 8px 0;
+  animation: dropIn 0.1s ease;
+}
+.save-menu__loading { padding: 10px 16px; font-size: 13px; color: var(--text-secondary); margin: 0; }
+.save-menu__row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 16px; font-size: 14px; color: var(--text);
+  cursor: pointer;
+}
+.save-menu__row:hover { background: rgba(255,255,255,0.08); }
+.save-menu__row input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--yt-red); flex-shrink: 0; cursor: pointer;
+}
+.save-menu__row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.save-menu__divider { height: 1px; background: #3f3f3f; margin: 6px 0; }
+.save-menu__playlists { max-height: 180px; overflow-y: auto; }
+.save-menu__new-btn {
+  display: block; width: 100%; text-align: left; font-family: inherit;
+  padding: 8px 16px; font-size: 14px; color: var(--text);
+  background: none; border: none; cursor: pointer;
+}
+.save-menu__new-btn:hover { background: rgba(255,255,255,0.08); }
+.save-menu__new-form { display: flex; gap: 6px; padding: 6px 12px; }
+.save-menu__new-form input[type="text"] {
+  flex: 1; min-width: 0; background: #121212; border: 1px solid #3f3f3f;
+  border-radius: 6px; color: var(--text); font-size: 13px; padding: 6px 8px;
+}
+.save-menu__new-form button {
+  background: var(--text); color: var(--bg); border: none; border-radius: 6px;
+  padding: 0 10px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+}
+.save-menu__new-form button:disabled { opacity: 0.5; cursor: default; }
+
+/* Card-specific placement: pin to the thumbnail's top-right corner, only
+   show on hover — unless the panel is actually open, so it doesn't vanish
+   out from under the user mid-interaction. */
+.video-card__thumb-wrap .save-menu {
   position: absolute; top: 6px; right: 14px;
   opacity: 0; transition: opacity 0.15s;
-  background: rgba(15,15,15,0.9); border-radius: 50%;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; border: none; color: #fff;
 }
-.video-card__menu:hover { background: rgba(50,50,50,0.9); }
+.video-card:hover .video-card__thumb-wrap .save-menu,
+.video-card__thumb-wrap .save-menu--open {
+  opacity: 1;
+}
 
 /* Watched progress bar */
 .video-card__progress {
@@ -903,6 +965,19 @@ img { display: block; }
 .ch-sub-count { font-size: 14px; color: var(--text-secondary); margin: 0 0 6px; }
 .ch-desc { font-size: 14px; color: var(--text-secondary); margin: 0; max-width: 600px; }
 
+.ch-subscribe-btn {
+  flex-shrink: 0; align-self: center;
+  padding: 0 16px; height: 36px; border-radius: 18px; border: none;
+  background: var(--text); color: var(--bg); /* high-contrast "Subscribe" pill */
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+.ch-subscribe-btn:hover { opacity: 0.85; }
+.ch-subscribe-btn:disabled { opacity: 0.6; cursor: default; }
+.ch-subscribe-btn--subscribed {
+  background: var(--bg-hover); color: var(--text);
+}
+
 .cp-tabs {
   border-bottom: 1px solid var(--border); padding: 0 32px;
   display: flex; max-width: 1284px; margin: 0 auto;
@@ -1060,6 +1135,14 @@ img { display: block; }
 }
 .form-group { display: flex; flex-direction: column; margin-bottom: 20px; }
 .form-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.uvp-checkbox-group { margin-bottom: 20px; }
+.uvp-checkbox-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: var(--text); cursor: pointer;
+}
+.uvp-checkbox-label input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--yt-red); cursor: pointer;
+}
 .form-group input {
   height: 44px; padding: 0 12px; border: 1px solid #3f3f3f;
   border-radius: 4px; font-size: 15px; color: var(--text);
@@ -1157,3 +1240,113 @@ img { display: block; }
     /* mini rail is always there on desktop */
   }
 }
+
+/* ============================================================
+   PERSONAL LIBRARY PAGES — History, Playlists, Watch Later,
+   Liked, Your Videos, Downloads, Subscriptions, Shorts
+   ============================================================ */
+
+.library-page__loading {
+  padding: 80px 16px; text-align: center;
+  color: var(--text-secondary); font-size: 16px;
+}
+
+.library-page__header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  padding: 24px 16px 12px;
+}
+.library-page__header h1 {
+  font-size: 22px; font-weight: 600; color: var(--text); margin: 0;
+}
+
+.library-page__action-btn {
+  display: inline-flex; align-items: center;
+  background: none; border: 1px solid var(--border); border-radius: 18px;
+  color: var(--text); padding: 8px 16px; font-size: 14px; font-weight: 500;
+  cursor: pointer; text-decoration: none; transition: background 0.15s;
+  font-family: inherit;
+}
+.library-page__action-btn:hover { background: var(--bg-hover); }
+.library-page__action-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Playlists index ── */
+.playlist-grid {
+  display: grid; gap: 20px; padding: 8px 16px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.playlist-card {
+  display: block; position: relative;
+  text-decoration: none; color: inherit;
+  border-radius: 12px; overflow: hidden;
+  background: var(--bg-hover);
+}
+.playlist-card__thumb {
+  position: relative; width: 100%; padding-top: 56.25%;
+  background: #272727;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
+.playlist-card__thumb > svg {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+.playlist-card__count {
+  position: absolute; bottom: 6px; right: 8px;
+  background: rgba(0,0,0,0.8); color: #fff;
+  font-size: 12px; font-weight: 500; border-radius: 4px; padding: 2px 6px;
+}
+.playlist-card__meta { padding: 10px 12px; }
+.playlist-card__name {
+  margin: 0 0 2px; font-size: 14px; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.playlist-card__sub { margin: 0; font-size: 12px; color: var(--text-secondary); }
+
+.playlist-card__delete {
+  position: absolute; top: 6px; right: 6px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(15,15,15,0.85); color: #fff; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.playlist-card:hover .playlist-card__delete { opacity: 1; }
+.playlist-card__delete:hover { background: rgba(50,50,50,0.9); }
+
+/* "+ New playlist" tile — a form styled to match the other cards */
+.playlist-card--new { background: none; }
+.playlist-card__thumb--new {
+  border: 1px dashed var(--border); background: none;
+}
+.playlist-card--new input[type="text"] {
+  width: 100%; margin-top: 10px; padding: 8px 10px;
+  background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 14px; font-family: inherit;
+}
+.playlist-card--new button {
+  margin-top: 8px; width: 100%; padding: 8px 0;
+  background: var(--text); color: var(--bg); border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
+}
+.playlist-card--new button:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Playlist detail ── */
+.playlist-detail__header { align-items: flex-start; }
+.playlist-detail__header h1 { cursor: pointer; }
+.playlist-detail__header h1:hover { text-decoration: underline; }
+.playlist-detail__rename-form input {
+  font-size: 22px; font-weight: 600; background: none;
+  border: none; border-bottom: 2px solid var(--text); color: var(--text);
+  font-family: inherit; padding: 0 0 2px;
+}
+.playlist-detail__actions { display: flex; align-items: center; gap: 16px; }
+.playlist-detail__count { color: var(--text-secondary); font-size: 14px; }
+
+.playlist-detail__item { display: flex; flex-direction: column; }
+.playlist-detail__remove {
+  margin: -8px 8px 12px; padding: 0;
+  background: none; border: none; cursor: pointer; text-align: left;
+  font-size: 12px; color: var(--text-secondary); font-family: inherit;
+}
+.playlist-detail__remove:hover { color: var(--text); text-decoration: underline; }
+

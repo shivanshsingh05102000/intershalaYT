@@ -15,6 +15,7 @@ const EMPTY = {
   thumbnailUrl: "",
   videoUrl: "",
   category: "",
+  isShort: false,
 };
 
 function UploadVideoPage() {
@@ -43,6 +44,7 @@ function UploadVideoPage() {
           thumbnailUrl: v.thumbnailUrl || "",
           videoUrl: v.videoUrl || "",
           category: v.category || "",
+          isShort: Boolean(v.isShort),
         });
       })
       .catch(() => { if (!cancelled) setApiError("Failed to load video for editing."); })
@@ -55,6 +57,10 @@ function UploadVideoPage() {
     setFields((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     setApiError("");
+  };
+
+  const handleShortToggle = (e) => {
+    setFields((prev) => ({ ...prev, isShort: e.target.checked }));
   };
 
   const validate = () => {
@@ -183,6 +189,17 @@ function UploadVideoPage() {
               {errors.category && (
                 <span className="field-error">{errors.category}</span>
               )}
+            </div>
+
+            <div className="form-group uvp-checkbox-group">
+              <label className="uvp-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={fields.isShort}
+                  onChange={handleShortToggle}
+                />
+                This is a Short (vertical, under 60s)
+              </label>
             </div>
 
             <button type="submit" className="auth-btn" disabled={loading}>

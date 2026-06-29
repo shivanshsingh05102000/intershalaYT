@@ -12,7 +12,7 @@ const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const getVideos = async (req, res, next) => {
   try {
-    const { search, category } = req.query;
+    const { search, category, isShort } = req.query;
     const filter = {};
 
     if (search) {
@@ -21,6 +21,9 @@ export const getVideos = async (req, res, next) => {
     }
     if (category) {
       filter.category = category;
+    }
+    if (isShort !== undefined) {
+      filter.isShort = isShort === "true";
     }
 
     const videos = await Video.find(filter)
@@ -39,7 +42,7 @@ export const getVideoById = async (req, res, next) => {
       req.params.id,
       { $inc: { views: 1 } }, // increment views atomically on every fetch
       { new: true } // return the document AFTER the increment, not before
-    ).populate("channel", "channelName avatar");
+    ).populate("channel", "channelName avatar owner");
 
     if (!video) {
       return res.status(404).json({ message: "Video not found" });
@@ -53,7 +56,7 @@ export const getVideoById = async (req, res, next) => {
 
 export const createVideo = async (req, res, next) => {
   try {
-    const { title, description, thumbnailUrl, videoUrl, category } = req.body;
+    const { title, description, thumbnailUrl, videoUrl, category, isShort } = req.body;
 
     if (!title || !thumbnailUrl || !videoUrl || !category) {
       return res.status(400).json({
@@ -73,6 +76,7 @@ export const createVideo = async (req, res, next) => {
       thumbnailUrl,
       videoUrl,
       category,
+      isShort: !!isShort,
       channel: channel._id,
       uploader: req.user._id,
     });
@@ -97,12 +101,13 @@ export const updateVideo = async (req, res, next) => {
       return res.status(403).json({ message: "Not authorized to edit this video" });
     }
 
-    const { title, description, thumbnailUrl, videoUrl, category } = req.body;
+    const { title, description, thumbnailUrl, videoUrl, category, isShort } = req.body;
     if (title) video.title = title;
     if (description !== undefined) video.description = description;
     if (thumbnailUrl) video.thumbnailUrl = thumbnailUrl;
     if (videoUrl) video.videoUrl = videoUrl;
     if (category) video.category = category;
+    if (isShort !== undefined) video.isShort = !!isShort;
 
     await video.save();
     return res.status(200).json({ message: "Video updated", video });

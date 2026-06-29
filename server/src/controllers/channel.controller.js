@@ -87,3 +87,41 @@ export const updateChannel = async (req, res, next) => {
     next(err);
   }
 };
+
+// POST /api/channels/:id/subscribe — toggle. `subscribers` on Channel is a
+// plain counter (not a list of who), so the actual per-user relationship
+// lives on User.subscribedChannels — this keeps both sides in sync.
+export const toggleSubscribe = async (req, res, next) => {
+  try {
+    const channel = await Channel.findById(req.params.id);
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    if (channel.owner.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "You can't subscribe to your own channel" });
+    }
+
+    const user = await User.findById(req.user._id);
+    const idx = user.subscribedChannels.findIndex(
+      (c) => c.toString() === channel._id.toString()
+    );
+
+    let subscribed;
+    if (idx > -1) {
+      user.subscribedChannels.splice(idx, 1);
+      channel.subscribers = Math.max(0, channel.subscribers - 1);
+      subscribed = false;
+    } else {
+      user.subscribedChannels.push(channel._id);
+      channel.subscribers += 1;
+      subscribed = true;
+    }
+
+    await Promise.all([user.save(), channel.save()]);
+
+    return res.status(200).json({ subscribed, subscribers: channel.subscribers });
+  } catch (err) {
+    next(err);
+  }
+};
